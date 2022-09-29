@@ -1,13 +1,22 @@
 ---
 title: "Unit 6: Classification Rules"
+subtitle: "Identifying Poisonous Mushrooms"
 author: "Steven Ferguson"
 date: "2022-09-29"
-output: html_document
+output: 
+  rmdformats::downcute:
+    downcute_theme: "chaos"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+# Step 1 -- Collecting the Data
+
+Mushrooms are tasty, but can be dangerous if found in the wild. Many wild poisonous mushrooms have a similar appearance to edible mushrooms. There are no clear, simple, or consistent rules to identify wild mushrooms. Therefore, identifying safe edible mushrooms in the wild is difficult, even for the most experienced foragers. Perhaps a rule-learning algorithm can generate easy to understand rules to classify wild mushrooms as poisonous or not.
+
+From lecture slides:
+
+"To identify rules for distinguishing poisonous mushrooms, we will utilize the Mushroom dataset by Jeff Schlimmer of Carnegie Mellon University. The raw dataset is available freely at the UCI Machine Learning Repository ([http://archive.ics.uci.edu/ml).](http://archive.ics.uci.edu/ml).) The dataset includes information on 8,124 mushroom samples from23 species of gilled mushrooms listed in Audubon Society Field Guide to North American Mushrooms (1981).In the Field Guide, each of the mushroom species is identified"definitely edible," "definitely poisonous," or "likely poisonous, and not recommended to be eaten." For the purposes of this dataset, the latter group was combined with the "definitely poisonous" group to make two classes: poisonous and edible (nonpoisonous )."
+
+# Step 2 -- Exploring and Preparing the Data
 
 ```{r}
 
@@ -18,17 +27,19 @@ str(mushrooms)
 
 # drop the veil_type feature
 mushrooms$veil_type <- NULL
+
 # examine the class distribution
 table(mushrooms$type)
+
 ```
 
-"We will consider the 81214 samples in the mushroom data to be an exhaustive set of all the possible wild mushrooms
+"We will consider the 81214 samples in the mushroom data to be an exhaustive set of all the possible wild mushrooms". This is an important assumption. Because this is a whole population, not a sample, we don't need to split data up into test and training datasets. We are not trying to develop rules that cover unforeseen types of Mushrooms.
 
-**IMPORTANT ASSUMPTION**
+# Step 3 -- Training a Model on the Data
 
-because this is a whole population, not a sample, we don't need to split data up into test and training datasets We are not trying to develop rules that cover unforeseen types of Mushrooms
+We need to pick an algorithm for our model. A ZeroR algorithm would not be helpful. ZeroR ignores all features and simply predicts the mode of a target. It would see 4208 mushrooms were tagged "edible" and 3916 were tagged "poisonous". With a zero rule algorithm, it would predict every unknown mushroom was "edible" simply because there are more labeled edible mushrooms in the training dataset. That's an accuracy of 52% ! We can do much better than that.
 
-ZeroR ignores all features and simply predict's target's MODE edible \> #poisonous, therefore it would state ALL mushrooms are edible.... not great
+A one rule algorithm analyzes the data and generates one all-encompassing rule. It works by finding the single rule that contains the least amount of error. Despite its simplicity, it is very accurate.
 
 ```{r}
 #install.packages("OneR")
@@ -38,15 +49,23 @@ library(OneR)
 mushroom_1R = OneR(type ~ ., data = mushrooms)
 
 print(mushroom_1R)
-
-
 ```
+
+A OneR algorithm is much more accurate: 98.52% ! These rules are very easy to understand. The algorithm found a significant pattern in the "odor" rule. If the odor was almond, anise, or "none", then it predicted the mushroom would be edible. It found that this pattern correctly identified 98.52% of the mushrooms. Just one rule! I'm surprised at how well this worked.
 
 ```{r}
 mushroom_1R_pred <- predict(mushroom_1R, mushrooms)
 table(actual = mushrooms$type, predicted = mushroom_1R_pred)
 # DANGEROUS RULE. TOO MANY FALSE POSITIVES. 120 predicted edible, but actually poisonous
 ```
+
+However, the One Rule algorithm did predict 120 were edible, but actually were poisonous (False Positive). Yes, the risk seems low (2.58%), but it's still unacceptably high when understanding the context of a false positive: potentially fatal poisoning. We can do better.
+
+Another common classification rule is the RIPPER Algorithm.
+
+**Write more here**
+
+Grow, prune, optimize.
 
 ```{r}
 detach("package:OneR", unload = TRUE)
@@ -57,6 +76,8 @@ mushroom_JRip
 summary(mushroom_JRip)
 ```
 
+100% correctly classified instances. That's fantastic. However, the rules are now a bit more complicated to understand because they combine rules using "and/or" statements. 9 rules were used. Therefore, it's a little less straightforward, but still accessible.
+
 ```{r}
 detach("package:RWeka", unload = TRUE) #OneR will not print if RWeka is attached
 library(C50)
@@ -65,3 +86,5 @@ summary(mushroom_c5rules)
 
 
 ```
+
+This happens to give the same rules and results as the OneR classifier.
