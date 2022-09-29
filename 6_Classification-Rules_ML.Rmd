@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Unit 6: Classification Rules"
 author: "Steven Ferguson"
 date: "2022-09-29"
 output: html_document
@@ -9,22 +9,59 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+```{r}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+mushrooms <- read.csv("mushrooms.csv", stringsAsFactors = TRUE)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# examine the structure of the data frame
+str(mushrooms)
 
-```{r cars}
-summary(cars)
+# drop the veil_type feature
+mushrooms$veil_type <- NULL
+# examine the class distribution
+table(mushrooms$type)
 ```
 
-## Including Plots
+"We will consider the 81214 samples in the mushroom data to be an exhaustive set of all the possible wild mushrooms
 
-You can also embed plots, for example:
+**IMPORTANT ASSUMPTION**
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+because this is a whole population, not a sample, we don't need to split data up into test and training datasets We are not trying to develop rules that cover unforeseen types of Mushrooms
+
+ZeroR ignores all features and simply predict's target's MODE edible \> #poisonous, therefore it would state ALL mushrooms are edible.... not great
+
+```{r}
+#install.packages("OneR")
+library(OneR)
+
+# train OneR() on the data
+mushroom_1R = OneR(type ~ ., data = mushrooms)
+
+print(mushroom_1R)
+
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+mushroom_1R_pred <- predict(mushroom_1R, mushrooms)
+table(actual = mushrooms$type, predicted = mushroom_1R_pred)
+# DANGEROUS RULE. TOO MANY FALSE POSITIVES. 120 predicted edible, but actually poisonous
+```
+
+```{r}
+detach("package:OneR", unload = TRUE)
+#install.packages("RWeka")
+library(RWeka) #GOOGLE WEKA AND LEARN ABOUT IT
+mushroom_JRip <- JRip(type ~ ., data = mushrooms)
+mushroom_JRip
+summary(mushroom_JRip)
+```
+
+```{r}
+detach("package:RWeka", unload = TRUE) #OneR will not print if RWeka is attached
+library(C50)
+mushroom_c5rules <- C5.0(type~odor+gill_size,data=mushrooms,rules=TRUE)
+summary(mushroom_c5rules)
+
+
+```
