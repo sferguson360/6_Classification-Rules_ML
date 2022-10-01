@@ -97,4 +97,4 @@ summary(mushroom_c5rules)
 
 ```
 
-The C5.0 classifier identified 2 if/then rules to classify the mushrooms with a 1.5% error rate. 120 false positives occurred. This happens to be the same result as the OneR algorithm. It actually used the same attributes in each rule as the OneR algorith, just formatted differently.
+The C5.0 classifier identified 2 if/then rules to classify the mushrooms with a 1.5% error rate. 120 false positives occurred. This happens to be the same result as the OneR algorithm. It actually used the same attributes in each rule as the OneR algorithm, just formatted differently.
